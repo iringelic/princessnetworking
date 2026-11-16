@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetLab Basics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Same workbook as NetLab: network bits cobalt, host bits amber. Each concept is three moves: learn, watch, do. */
+:root{
+  --bg:#f2f3ef; --surface:#ffffff; --sunk:#e8eae4; --ink:#17212b; --muted:#586471; --line:#d3d7cf;
+  --net:#2450d6; --net-soft:#e3e9fb; --host:#b35900; --host-soft:#fbecd9;
+  --ok:#157f46; --ok-soft:#dff3e7; --bad:#c93434; --bad-soft:#fbe3e3;
+  --term-bg:#101820; --term-ink:#d5dee7;
+  --f-display:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1319; --surface:#171f28; --sunk:#111820; --ink:#e6ebf0; --muted:#98a5b2; --line:#2a3541;
+  --net:#8ca8ff; --net-soft:#1c2a52; --host:#f0a650; --host-soft:#3b2a12;
+  --ok:#54cf8d; --ok-soft:#143524; --bad:#ff8080; --bad-soft:#431d1d; --term-bg:#090d12; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e1319; --surface:#171f28; --sunk:#111820; --ink:#e6ebf0; --muted:#98a5b2; --line:#2a3541;
+  --net:#8ca8ff; --net-soft:#1c2a52; --host:#f0a650; --host-soft:#3b2a12;
+  --ok:#54cf8d; --ok-soft:#143524; --bad:#ff8080; --bad-soft:#431d1d; --term-bg:#090d12; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body);-webkit-text-size-adjust:100%}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;text-wrap:balance;margin:0}
+h2{font-size:1.75rem;font-weight:700;letter-spacing:-.01em} h3{font-size:1.1rem;font-weight:700}
+p{margin:0}
+code,.mono{font-family:var(--f-mono);font-size:.92em}
+code{background:var(--sunk);padding:.08em .35em;border-radius:5px}
+button,input,select{font:inherit;color:inherit} button{cursor:pointer}
+:focus-visible{outline:2px solid var(--net);outline-offset:2px}
+a{color:var(--net)}
+.nb{color:var(--net)} .hb{color:var(--host)} .muted{color:var(--muted)} .small{font-size:.875rem}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.45rem .85rem;font-weight:500;line-height:1.2}
+.btn:hover{border-color:var(--muted)} .btn.primary{background:var(--net);border-color:var(--net);color:var(--surface)} .btn[disabled]{opacity:.5;cursor:default}
+input[type=text]{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.4rem .55rem;min-width:0;font-family:var(--f-mono)}
+label{font-size:.875rem;color:var(--muted);font-weight:500}
+.note{border-left:3px solid var(--host);background:var(--host-soft);padding:.6rem .8rem;border-radius:0 8px 8px 0;font-size:.94rem}
+.note.blue{border-color:var(--net);background:var(--net-soft)} .note.bad{border-color:var(--bad);background:var(--bad-soft)} .note.ok{border-color:var(--ok);background:var(--ok-soft)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:.4rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.hl td{background:var(--net-soft)}
+
+.top{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:1rem;padding:.55rem 1rem;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:.55rem;font-family:var(--f-display);font-weight:700;font-size:1.25rem;letter-spacing:-.02em}
+.brand small{font-family:var(--f-mono);font-size:.7rem;font-weight:500;color:var(--host);letter-spacing:0;border:1px solid var(--host);border-radius:5px;padding:0 .3rem}
+.bits{display:grid;grid-template-columns:repeat(8,5px);gap:2px} .bits i{width:5px;height:11px;border-radius:1px;background:var(--net)} .bits i.h{background:var(--host)}
+.top .meta{margin-left:auto;font-size:.8rem;color:var(--muted);text-align:right}
+main{padding:1rem}
+.wrap{display:grid;grid-template-columns:280px minmax(0,1fr);gap:1.5rem;max-width:1120px;margin:0 auto;align-items:start}
+.list{position:sticky;top:4.2rem;display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - 5rem);overflow:auto}
+.list .grp{font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;padding:.7rem .6rem .2rem}
+.list button{display:flex;gap:.6rem;align-items:center;text-align:left;border:0;background:none;padding:.42rem .6rem;border-radius:8px;color:var(--muted);font-weight:500}
+.list button[aria-current=true]{background:var(--surface);color:var(--ink);box-shadow:inset 3px 0 0 var(--net)}
+.dots{display:flex;gap:2px;flex:none} .dots i{width:5px;height:12px;border-radius:1px;background:var(--line)} .dots i.on{background:var(--net)} .dots.done i{background:var(--ok)}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:1.5rem;display:flex;flex-direction:column;gap:1.1rem;min-width:0}
+.kick{font-family:var(--f-mono);font-size:.8rem;color:var(--net)}
+.stepper{display:flex;gap:.25rem;background:var(--sunk);padding:.2rem;border-radius:10px;align-self:flex-start;flex-wrap:wrap}
+.stepper button{border:0;background:none;padding:.4rem .9rem;border-radius:8px;font-weight:600;color:var(--muted)}
+.stepper button .n{font-family:var(--f-mono);font-weight:500;margin-right:.35rem}
+.stepper button[aria-selected=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.prose{display:flex;flex-direction:column;gap:.75rem;max-width:68ch}
+.sheet ul,.sheet ol{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:.3rem}
+.demo{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:1rem;display:flex;flex-direction:column;gap:.8rem;min-width:0}
+.demo>.cap{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:.3rem .75rem;font-size:.9rem}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.out{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:.8rem;display:flex;flex-direction:column;gap:.4rem}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem;font-size:.94rem;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--f-mono);overflow-wrap:anywhere}
+.bitrow{display:flex;gap:2px;flex-wrap:wrap;font-family:var(--f-mono)}
+.bit{width:34px;height:42px;border:1px solid var(--line);background:var(--surface);border-radius:6px;font-weight:600;padding:0;font-size:1.05rem}
+.bit.on{background:var(--net);border-color:var(--net);color:var(--surface)}
+.bit small{display:block;font-size:.6rem;font-weight:400;opacity:.75}
+.binline{font-family:var(--f-mono);font-size:.95rem;overflow-wrap:anywhere}
+.bar{display:flex;height:38px;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.bar div{flex:1;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-family:var(--f-mono);color:var(--muted);border-right:1px solid var(--line);overflow:hidden;white-space:nowrap}
+.bar div.on{background:var(--net);color:var(--surface)}
+.steps{display:flex;flex-direction:column;gap:.4rem;counter-reset:s}
+.steps>div{padding:.55rem .75rem .55rem 2.4rem;border-radius:8px;border:1px solid var(--line);background:var(--surface);position:relative;font-size:.95rem}
+.steps>div::before{counter-increment:s;content:counter(s);position:absolute;left:.7rem;top:.55rem;font-family:var(--f-mono);font-weight:600;color:var(--net)}
+.clicky{font-family:var(--f-mono);font-size:.9rem;background:var(--term-bg);color:var(--term-ink);border-radius:10px;padding:.8rem;overflow-x:auto;white-space:pre;line-height:1.7}
+.task{border:2px solid var(--ink);border-radius:12px;padding:1.1rem;display:flex;flex-direction:column;gap:.9rem}
+.task .prompt{font-size:1.08rem}
+.task .prompt .big{font-family:var(--f-mono);font-size:1.3rem;font-weight:600;display:block;margin:.3rem 0}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.7rem}
+.field{display:flex;flex-direction:column;gap:.2rem}
+.field .row{display:flex;gap:.4rem;align-items:center} .field input{flex:1;width:100%}
+.field input.right{border-color:var(--ok);background:var(--ok-soft)} .field input.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.mark{font-family:var(--f-mono);font-weight:600;font-size:.8rem;width:2.4rem;flex:none} .mark.ok{color:var(--ok)} .mark.no{color:var(--bad)}
+.opts{display:flex;flex-direction:column;gap:.4rem}
+.opts button{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:.5rem .75rem}
+.opts button.right{border-color:var(--ok);background:var(--ok-soft)} .opts button.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.rowbtns{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.streak{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;font-size:.9rem}
+.streak .dots i{width:9px;height:18px;border-radius:2px}
+.navrow{display:flex;justify-content:space-between;gap:.5rem;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:1rem}
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  .list{position:static;flex-direction:row;overflow-x:auto;max-height:none;padding-bottom:.3rem;align-items:center}
+  .list .grp{display:none}
+  .list button{flex:none;white-space:nowrap;background:var(--surface);border:1px solid var(--line)}
+  .list button[aria-current=true]{box-shadow:none;border-color:var(--net)}
+}
+@media (max-width:640px){main{padding:.75rem}.sheet{padding:1rem}h2{font-size:1.4rem}.top .meta{display:none}.bit{width:30px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="bits" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i class="h"></i><i class="h"></i><i class="h"></i></span>NetLab <small>BASICS</small></div>
+  <a class="small" href="https://claude.ai/artifact/FvUMgiPNoPN7pPEobefKc7">Open the full NetLab simulator</a>
+  <div class="meta" id="meta"></div>
+</header>
+<main><div class="wrap"><nav class="list" id="list" aria-label="Concepts"></nav><article class="sheet" id="sheet"></article></div></main>
+<script>
+(function(){
+'use strict';
+/* ---------- helpers ---------- */
+const $=(s,r)=>(r||document).querySelector(s);
+function el(tag,attrs,...kids){const e=document.createElement(tag);for(const k in (attrs||{})){const v=attrs[k];if(v==null)continue;if(k.startsWith('aria-')){e.setAttribute(k,String(v));continue;}if(v===false)continue;if(k==='class')e.className=v;else if(k==='html')e.innerHTML=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else e.setAttribute(k,v===true?'':v);}kids.flat(Infinity).forEach(c=>{if(c!=null&&c!==false)e.append(c.nodeType?c:document.createTextNode(c));});return e;}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+const ip2int=s=>{const m=/^\s*(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\s*$/.exec(String(s==null?'':s));if(!m)return null;let n=0;for(let i=1;i<=4;i++){const o=+m[i];if(o>255)return null;n=n*256+o;}return n;};
+const int2ip=n=>[n>>>24,(n>>>16)&255,(n>>>8)&255,n&255].join('.');
+const maskOf=p=>p<=0?0:(0xFFFFFFFF<<(32-p))>>>0;
+const netOf=(ip,p)=>(ip&maskOf(p))>>>0, bcOf=(ip,p)=>(netOf(ip,p)|(~maskOf(p)>>>0))>>>0;
+const bits32=n=>(n>>>0).toString(2).padStart(32,'0'), bin8=n=>n.toString(2).padStart(8,'0');
+const binTone=(n,p)=>{const b=bits32(n);let h='';for(let i=0;i<32;i++){if(i&&i%8===0)h+='<span class="muted">.</span>';h+=`<span class="${i<p?'nb':'hb'}">${b[i]}</span>`;}return h;};
+const ipTone=(n,p)=>`<span class="nb">${int2ip(n)}</span><span class="hb">/${p}</span>`;
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1)), pick=a=>a[rnd(0,a.length-1)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(0,i);[a[i],a[j]]=[a[j],a[i]];}return a;};
+const prose=(...ps)=>el('div',{class:'prose'},ps.map(p=>typeof p==='string'?el('p',{html:p}):p));
+const demo=(cap,...kids)=>el('div',{class:'demo'},el('div',{class:'cap'},cap),kids);
+const kv=pairs=>el('dl',{class:'kv'},pairs.map(([k,v])=>[el('dt',null,k),el('dd',{html:v})]));
+function picker(items,render){const chips=el('div',{class:'chips'}),out=el('div',{class:'out'});const go=i=>{[...chips.children].forEach((c,j)=>c.setAttribute('aria-pressed',j===i));out.replaceChildren(...[render(items[i])].flat());};items.forEach((it,i)=>chips.append(el('button',{class:'chip',type:'button',onclick:()=>go(i)},it.t)));go(0);return [chips,out];}
+// question bank -> generator that avoids repeating the last question
+function bank(items){let last=-1;return()=>{let i;do{i=rnd(0,items.length-1);}while(i===last&&items.length>1);last=i;const q=items[i],order=shuffle(q.o.map((_,k)=>k));return{type:'choice',prompt:q.q,opts:order.map(k=>q.o[k]),a:order.indexOf(0),work:[q.why]};};}
+// the "magic number" working for one address
+function subnetWork(ip,p){
+  const m=maskOf(p),k=Math.min(3,Math.floor((p-1)/8)),mo=(m>>>(24-k*8))&255,B=256-mo,v=(ip>>>(24-k*8))&255,n=Math.floor(v/B)*B,net=netOf(ip,p),bc=bcOf(ip,p),nth=['first','second','third','fourth'][k];
+  const mult=[];for(let x=Math.max(0,n-2*B);x<=Math.min(255,n+2*B);x+=B)mult.push(x===n?`<strong>${x}</strong>`:x);
+  return [`/${p} as a mask is <code>${int2ip(m)}</code>. The octet where the mask is not 255 is the ${nth} one, with the value <strong>${mo}</strong>. That is the only octet you need to think about.`,
+    `Block size = 256 − ${mo} = <strong>${B}</strong>. Subnets start at multiples of ${B} in that octet: … ${mult.join(', ')} …`,
+    `The address has <strong>${v}</strong> in that octet. The largest multiple of ${B} that is not above ${v} is <strong>${n}</strong>, so the network address is <code>${int2ip(net)}</code>${k<3?' (every octet to the right becomes 0)':''}.`,
+    `The next subnet starts at ${n+B>255?'the next value of the octet to the left':n+B}, so this one ends one address before it: the broadcast is <code>${int2ip(bc)}</code>.`,
+    `Usable hosts sit between the two: <code>${int2ip(net+1)}</code> to <code>${int2ip(bc-1)}</code>. That is 2<sup>${32-p}</sup> − 2 = ${Math.pow(2,32-p)-2} addresses.`];
+}
+const hostBitsFor=need=>{let h=2;while(Math.pow(2,h)-2<need)h++;return h;};
+
+/* ---------- concepts ---------- */
+const C=[];
+C.push({id:'networks',group:'Foundations',title:'Networks, LANs and WANs',mins:4,
+ learn:()=>[prose('A <strong>network</strong> is a set of devices that can send data to each other. Everything else in this subject is about how the data finds its way.','Data never travels in one piece. It is cut into small <strong>packets</strong>, and each packet is like an envelope with two addresses written on it: who it is from and who it is for. Devices along the way read the "for" address and pass the envelope on.'),
+  demo('Tap a word to see what it means',picker([
+   {t:'host',d:'Any device with an address that sends or receives data: a PC, a laptop, a server. The 50 staff machines in your assignment are hosts.'},
+   {t:'LAN',d:'Local area network. The devices in one place, such as one office, connected through a switch. Fast, cheap, and you own all of it.'},
+   {t:'WAN',d:'Wide area network. A link between places that are far apart. In your assignment the serial cable between the Manchester and London routers is the WAN.'},
+   {t:'switch',d:'The box every PC in an office plugs into. It passes data between devices on the same LAN.'},
+   {t:'router',d:'The device that joins different networks together and decides which way each packet should go next. One per city in your design.'},
+   {t:'access point',d:'A radio that lets laptops join the LAN without a cable. It behaves like a wireless extension of the switch.'},
+   {t:'server',d:'A host whose job is to provide something to the others: web pages, name lookups, addresses.'},
+   {t:'subnet',d:'One block of addresses used by one LAN. Each office gets its own subnet, and the router sits between them.'},
+   {t:'default gateway',d:'The router port on a host\'s own LAN. A host hands it every packet that is going somewhere outside its own subnet.'}],it=>el('p',null,it.d))),
+  prose('Put together, your assignment network is: four office LANs (a switch and some PCs each), two routers that join the offices in each city, and one WAN link that joins the two cities.')],
+ gen:bank([
+  {q:'Ten PCs in one office all plug into the same box so they can talk to each other. What is the box?',o:['A switch','A router','A server'],why:'A switch connects the devices inside one LAN. A router is only needed to reach other networks.'},
+  {q:'The link between the Manchester office and the London office is a…',o:['WAN','LAN','subnet mask'],why:'A WAN joins sites that are far apart. Each office on its own is a LAN.'},
+  {q:'Which device joins two different networks and chooses where packets go next?',o:['A router','A switch','An access point'],why:'Routing between networks is the router\'s job. Switches and access points only work inside one LAN.'},
+  {q:'A laptop joins the office network without a cable. What is it connecting to?',o:['An access point','A serial port','A server'],why:'An access point is the radio that bridges Wi-Fi devices into the wired LAN.'},
+  {q:'What do we call any device that has an address and sends or receives data?',o:['A host','A gateway','A packet'],why:'PCs, laptops and servers are all hosts.'},
+  {q:'Data crossing a network is cut into small labelled units called…',o:['packets','subnets','ports'],why:'Each packet carries a source and a destination address, like an envelope.'},
+  {q:'A PC wants to send to a machine in another city. Where does it send the packet first?',o:['Its default gateway','The destination PC directly','The access point'],why:'Anything outside the PC\'s own subnet is handed to the default gateway, which is the router port on its LAN.'},
+  {q:'One office\'s PCs, their switch and the router port they share all use addresses from one block. That block is a…',o:['subnet','WAN','protocol'],why:'One LAN, one subnet. That is why your plan has a subnet per office.'},
+  {q:'The machine that holds the company web page is a…',o:['server','switch','router'],why:'A server is a host that provides a service to other hosts.'}])});
+
+C.push({id:'layers',group:'Foundations',title:'Layers, protocols and ports',mins:5,
+ learn:()=>[prose('Networking is split into layers so each part only has to do one job. You will hear "layer 2" and "layer 3" constantly. This table is the whole idea, top to bottom.'),
+  el('div',{class:'tablewrap'},el('table',{html:'<tr><th>Layer</th><th>Its job</th><th>What lives there</th></tr><tr><td><strong>7 Application</strong></td><td>The thing the user wants</td><td>HTTP (web), DNS (names), DHCP (hands out addresses), FTP (files), SSH and Telnet (remote login)</td></tr><tr><td><strong>4 Transport</strong></td><td>Get data to the right program</td><td>TCP (checks everything arrived), UDP (fast, no checking), port numbers</td></tr><tr><td><strong>3 Network</strong></td><td>Get a packet to the right network</td><td>IP addresses, routers, ICMP (what ping uses)</td></tr><tr><td><strong>2 Data link</strong></td><td>Get a frame to the next device on this LAN</td><td>MAC addresses, Ethernet, Wi-Fi, switches, access points</td></tr><tr><td><strong>1 Physical</strong></td><td>Move the bits</td><td>Cables, radio waves</td></tr>'})),
+  prose('A <strong>protocol</strong> is an agreed set of rules for one job. A <strong>port number</strong> tells the receiving computer which program a packet is for, so one server can run a web site and a name service at once. These six are worth memorising.'),
+  el('div',{class:'tablewrap'},el('table',{html:'<tr><th>Protocol</th><th class="num">Port</th><th>What it does</th></tr><tr><td>HTTP</td><td class="num">80</td><td>Fetches web pages</td></tr><tr><td>DNS</td><td class="num">53</td><td>Turns a name into an IP address</td></tr><tr><td>SSH</td><td class="num">22</td><td>Remote login, encrypted</td></tr><tr><td>Telnet</td><td class="num">23</td><td>Remote login, readable by anyone listening</td></tr><tr><td>FTP</td><td class="num">21</td><td>Transfers files</td></tr><tr><td>DHCP</td><td class="num">67 / 68</td><td>Gives hosts their IP settings automatically</td></tr>'})),
+  el('p',{class:'note blue'},'When your brief says "at least one application-layer service", it means something from the top row: HTTP, DNS, FTP or DHCP.')],
+ gen:bank([
+  {q:'At which layer does a switch work?',o:['Layer 2 (data link)','Layer 3 (network)','Layer 7 (application)'],why:'Switches forward frames using MAC addresses, which belong to layer 2.'},
+  {q:'At which layer does a router work?',o:['Layer 3 (network)','Layer 2 (data link)','Layer 1 (physical)'],why:'Routers forward packets using IP addresses, which belong to layer 3.'},
+  {q:'Which port does SSH use?',o:['22','23','80'],why:'SSH is 22. Its insecure older cousin Telnet is next door on 23.'},
+  {q:'Which port does HTTP use?',o:['80','53','21'],why:'Web servers listen on port 80.'},
+  {q:'Which port does DNS use?',o:['53','22','80'],why:'DNS queries go to port 53.'},
+  {q:'Which port does Telnet use?',o:['23','22','67'],why:'Telnet is 23, SSH is 22.'},
+  {q:'Which protocol turns www.company.local into an IP address?',o:['DNS','HTTP','DHCP'],why:'DNS is the name service. HTTP then fetches the page from the address DNS returned.'},
+  {q:'Which protocol hands a PC its IP address, mask and gateway automatically?',o:['DHCP','DNS','ICMP'],why:'DHCP configures hosts so you do not have to type addresses in by hand.'},
+  {q:'What does the ping command use?',o:['ICMP','HTTP','DNS'],why:'Ping sends ICMP echo requests and waits for echo replies. ICMP belongs to the network layer.'},
+  {q:'Which kind of address is used at layer 2?',o:['MAC address','IP address','Port number'],why:'MAC addresses identify devices on one LAN. IP addresses are layer 3.'},
+  {q:'Which of these counts as an application-layer service for your brief?',o:['HTTP','Ethernet','IP'],why:'HTTP is what a user actually uses. Ethernet is layer 2 and IP is layer 3.'},
+  {q:'Which transport protocol checks that everything arrived and resends what was lost?',o:['TCP','UDP','ICMP'],why:'TCP is reliable. UDP just sends and hopes, which is faster.'}])});
+
+C.push({id:'binary',group:'Foundations',title:'Binary and decimal',mins:5,
+ learn:()=>{let v=172;const row=el('div',{class:'bitrow'}),sum=el('div',{class:'out'});const draw=()=>{row.replaceChildren();const on=[];for(let b=7;b>=0;b--){const o=(v>>b)&1;if(o)on.push(1<<b);row.append(el('button',{type:'button',class:'bit'+(o?' on':''),'aria-label':'bit worth '+(1<<b),onclick:()=>{v^=1<<b;draw();}},String(o),el('small',null,String(1<<b))));}sum.innerHTML=`<span class="mono" style="font-size:1.3rem">${on.length?on.join(' + '):'0'} = <strong>${v}</strong></span>`;};draw();
+  return [prose('Computers store an IP address as ones and zeros. We write it as four ordinary numbers because that is easier to read. Each of the four numbers is one <strong>octet</strong>: eight bits.','Each bit has a fixed value. From left to right: <code>128 64 32 16 8 4 2 1</code>. Every one is double the one to its right. An octet\'s value is the total of the bits that are switched on. Learn that row of eight numbers and you can do every conversion.'),
+   demo('Click the bits',row,sum),
+   prose('All eight on makes 255, the largest value an octet can hold. All eight off makes 0.')];},
+ worked:['<strong>Turn 172 into binary.</strong> Work left to right through 128, 64, 32, 16, 8, 4, 2, 1, asking "does it fit in what is left?"','128 fits in 172. Write <strong>1</strong>. Left over: 172 − 128 = 44.','64 does not fit in 44. Write <strong>0</strong>.','32 fits in 44. Write <strong>1</strong>. Left over: 12.','16 does not fit in 12. Write <strong>0</strong>.','8 fits in 12. Write <strong>1</strong>. Left over: 4.','4 fits in 4. Write <strong>1</strong>. Left over: 0, so the last two bits are <strong>0 0</strong>.','Answer: <code>10101100</code>. Check by adding the ones back up: 128 + 32 + 8 + 4 = 172.'],
+ gen:()=>{const n=rnd(1,255),b=bin8(n);if(Math.random()<.5){const w=[];let left=n;for(let k=7;k>=0;k--){const val=1<<k;if(left>=val){w.push(`${val} fits in ${left}: write 1, left over ${left-val}`);left-=val;}else w.push(`${val} does not fit in ${left}: write 0`);}return{type:'fields',prompt:`Write this number as eight bits.<span class="big">${n}</span>`,fields:[{label:'Binary (8 bits)',ans:b,kind:'bin'}],work:['Work through 128, 64, 32, 16, 8, 4, 2, 1.',w.join('<br>'),`Answer: <code>${b}</code>`]};}
+  const on=[];for(let k=7;k>=0;k--)if((n>>k)&1)on.push(1<<k);return{type:'fields',prompt:`What number is this octet?<span class="big">${b}</span>`,fields:[{label:'Decimal',ans:String(n),kind:'num'}],work:['Write the values 128, 64, 32, 16, 8, 4, 2, 1 above the bits and keep the ones under a 1.',`${on.join(' + ')} = <strong>${n}</strong>`]};}});
+
+C.push({id:'masks',group:'Addressing',title:'Masks and prefixes',mins:5,
+ learn:()=>{const sl=el('input',{type:'range',id:'mk-p',min:8,max:30,value:26,style:'flex:1;min-width:150px'}),pl=el('strong',{class:'mono'}),out=el('div',{class:'out'});const draw=()=>{const p=+sl.value,m=maskOf(p);pl.textContent='/'+p;out.replaceChildren(el('div',{class:'binline',html:binTone(m,p)}),kv([['Mask',int2ip(m)],['Network bits',`<span class="nb">${p}</span>`],['Host bits',`<span class="hb">${32-p}</span>`],['Addresses in the subnet',`2<sup>${32-p}</sup> = ${Math.pow(2,32-p)}`],['Usable by devices',`${Math.pow(2,32-p)} − 2 = ${Math.pow(2,32-p)-2}`]]));};sl.addEventListener('input',draw);draw();
+  return [prose('An IP address has two parts. The left part says which <span class="nb"><strong>network</strong></span> (the street). The right part says which <span class="hb"><strong>host</strong></span> on it (the house number). The <strong>subnet mask</strong> shows where the split is: a 1 for every network bit, then a 0 for every host bit.','A <strong>prefix</strong> is the same information written shorter. <code>/26</code> means "the first 26 bits are network". The mask for /26 is 26 ones followed by 6 zeros.','The number of host bits decides how big the subnet is. With <em>h</em> host bits there are 2<sup>h</sup> addresses. Two are reserved (the first names the network, the last is the broadcast), so 2<sup>h</sup> − 2 are usable.'),
+   demo('Slide the prefix',el('div',{style:'display:flex;gap:.8rem;align-items:center;flex-wrap:wrap'},el('label',{for:'mk-p'},'Prefix'),sl,pl),out),
+   el('div',{class:'tablewrap'},el('table',{html:'<tr><th>Bits on in an octet</th>'+[1,2,3,4,5,6,7,8].map(x=>`<td class="num">${x}</td>`).join('')+'</tr><tr><th>Mask octet value</th>'+[128,192,224,240,248,252,254,255].map(x=>`<td class="num mono">${x}</td>`).join('')+'</tr>'})),
+   prose('That small table is the only thing to memorise. A mask octet can only ever be one of those eight values, or 0.')];},
+ worked:['<strong>What is the mask for /26?</strong> Each full octet of ones uses 8 bits and is written 255.','26 = 8 + 8 + 8 + 2. So the first three octets are 255, and the fourth has 2 bits on.','Two bits on is 128 + 64 = <strong>192</strong>.','Mask: <code>255.255.255.192</code>.','Host bits: 32 − 26 = 6. Addresses: 2<sup>6</sup> = 64. Usable: 64 − 2 = <strong>62</strong>.'],
+ gen:()=>{const t=rnd(0,2),p=t===2?rnd(22,30):rnd(9,30),m=maskOf(p),full=Math.floor(p/8),rem=p%8,vals=[0,128,192,224,240,248,252,254];
+  if(t===0)return{type:'fields',prompt:`Write this prefix as a subnet mask.<span class="big">/${p}</span>`,fields:[{label:'Subnet mask',ans:int2ip(m),kind:'ip'}],work:[`${p} = ${full} full octet${full===1?'':'s'} of 8${rem?` + ${rem} more bit${rem>1?'s':''}`:''}.`,`Full octets are 255.${rem?` ${rem} bit${rem>1?'s':''} on in the next octet is ${vals[rem]}.`:''} Anything left is 0.`,`Mask: <code>${int2ip(m)}</code>`]};
+  if(t===1)return{type:'fields',prompt:`Write this mask as a prefix.<span class="big">${int2ip(m)}</span>`,fields:[{label:'Prefix (just the number)',ans:String(p),kind:'num'}],work:[`Count the 1 bits. Each 255 is 8 bits.${rem?` ${vals[rem]} is ${rem} bit${rem>1?'s':''}.`:''}`,`${full} × 8${rem?' + '+rem:''} = <strong>/${p}</strong>`]};
+  return{type:'fields',prompt:`How many devices can use addresses in a subnet with this prefix?<span class="big">/${p}</span>`,fields:[{label:'Usable addresses',ans:String(Math.pow(2,32-p)-2),kind:'num'}],work:[`Host bits = 32 − ${p} = ${32-p}.`,`2<sup>${32-p}</sup> = ${Math.pow(2,32-p)} addresses.`,`Take away the network and broadcast addresses: <strong>${Math.pow(2,32-p)-2}</strong>.`]};}});
+
+C.push({id:'subnetting',group:'Addressing',title:'Subnetting an address',mins:8,levels:['Last octet (/25 to /30)','Any octet (/17 to /30)'],
+ learn:()=>{let p=27,v=77;const chips=el('div',{class:'chips'}),sl=el('input',{type:'range',id:'sb-v',min:0,max:255,value:v,style:'flex:1;min-width:150px'}),vl=el('strong',{class:'mono'}),bar=el('div',{class:'bar'}),out=el('div',{class:'out'});
+  const draw=()=>{chips.replaceChildren(...[25,26,27,28,29,30].map(x=>el('button',{class:'chip mono',type:'button','aria-pressed':x===p,onclick:()=>{p=x;draw();}},'/'+x)));const B=Math.pow(2,32-p),n=Math.floor(v/B)*B,cnt=256/B;vl.textContent='10.47.0.'+v;
+   const show=Math.min(cnt,16),first=Math.max(0,Math.min(cnt-show,Math.floor(n/B)-Math.floor(show/2)));bar.replaceChildren();for(let i=first;i<first+show;i++)bar.append(el('div',{class:i*B===n?'on':''},String(i*B)));
+   out.replaceChildren(kv([['Mask last octet',String(256-B)],['Block size','256 − '+(256-B)+' = <strong>'+B+'</strong>'],['Subnets start at',`multiples of ${B}`+(cnt>16?` (showing 16 of ${cnt})`:'')],['This address is in',`the block starting at <strong>${n}</strong>`],['Network address',`10.47.0.${n}`],['Broadcast address',`10.47.0.${n+B-1} <span class="muted">(one before ${n+B>255?'the end':'the next block, '+(n+B)})</span>`],['Usable hosts',`10.47.0.${n+1} to 10.47.0.${n+B-2}`]]));};
+  sl.addEventListener('input',()=>{v=+sl.value;draw();});draw();
+  return [prose('This is the skill the whole addressing scheme rests on. Given any address and prefix, you need four things: the <strong>network address</strong> (where the subnet starts), the <strong>broadcast address</strong> (where it ends), and the <strong>first and last usable</strong> addresses in between.','You do not need binary for this. There is a shortcut called the <strong>block size</strong>, and it is one subtraction:'),
+   el('ol',null,el('li',{html:'Find the mask octet that is not 255. Call it the interesting octet.'}),el('li',{html:'<strong>Block size = 256 − that mask value.</strong>'}),el('li',{html:'Subnets start at multiples of the block size: 0, then one block, two blocks, and so on.'}),el('li',{html:'Find the multiple at or just below your address. That is the network address.'}),el('li',{html:'The broadcast is one less than the next multiple. Usable hosts are everything in between.'})),
+   demo('Move the address and change the prefix',el('div',null,chips),el('div',{style:'display:flex;gap:.8rem;align-items:center;flex-wrap:wrap'},el('label',{for:'sb-v'},'Address'),sl,vl),bar,out)];},
+ worked:['<strong>Find everything about 10.47.0.77/27.</strong>','/27 is the mask 255.255.255.<strong>224</strong>. The interesting octet is the last one.','Block size = 256 − 224 = <strong>32</strong>.','Multiples of 32: 0, 32, <strong>64</strong>, 96, 128… The address has 77 in the last octet. 64 is the largest multiple that is not above 77.','Network address: <code>10.47.0.64</code>.','The next subnet starts at 96, so this one ends at 95. Broadcast: <code>10.47.0.95</code>.','Usable hosts: <code>10.47.0.65</code> to <code>10.47.0.94</code>. That is 30 addresses, which matches 2<sup>5</sup> − 2.'],
+ gen:lv=>{const p=lv?pick([17,18,19,20,21,22,23,25,26,27,28,29,30]):rnd(25,30);let ip;do{ip=((10<<24)|(rnd(1,99)<<16)|(rnd(0,255)<<8)|rnd(1,254))>>>0;}while(ip===netOf(ip,p)||ip===bcOf(ip,p));const n=netOf(ip,p),b=bcOf(ip,p);
+  return{type:'fields',prompt:`Work out the subnet this address belongs to.<span class="big">${int2ip(ip)}/${p}</span>`,fields:[{label:'Network address',ans:int2ip(n),kind:'ip'},{label:'Broadcast address',ans:int2ip(b),kind:'ip'},{label:'First usable host',ans:int2ip(n+1),kind:'ip'},{label:'Last usable host',ans:int2ip(b-1),kind:'ip'}],work:subnetWork(ip,p)};}});
+
+C.push({id:'gateway',group:'Addressing',title:'Same subnet, or via the gateway?',mins:5,
+ learn:()=>{const f=(id,v)=>el('input',{type:'text',id,value:v,style:'width:10rem'}),a=f('gw-a','10.47.0.10'),d=f('gw-d','10.47.0.40'),pp=f('gw-p','27'),out=el('div',{class:'out'});pp.style.width='4rem';
+  const draw=()=>{const x=ip2int(a.value),y=ip2int(d.value),p=+pp.value;if(x==null||y==null||!(p>=8&&p<=30)){out.innerHTML='<span class="muted">Enter two addresses and a prefix from 8 to 30.</span>';return;}const n1=netOf(x,p),n2=netOf(y,p),same=n1===n2;out.replaceChildren(kv([['PC',binTone(x,p)],['its network',ipTone(n1,p)],['Destination',binTone(y,p)],['its network',ipTone(n2,p)]]),el('p',{class:'note '+(same?'ok':'blue'),html:same?'<strong>Same subnet.</strong> The network bits match, so the PC delivers the packet itself across the switch. No router involved.':'<strong>Different subnets.</strong> The network bits differ, so the PC sends the packet to its default gateway and lets the router deal with it.'}));};[a,d,pp].forEach(x=>x.addEventListener('input',draw));draw();
+  return [prose('Before sending anything, a PC asks one question: <strong>is the destination in my own subnet?</strong> It finds its own network address, finds the destination\'s network address using the same mask, and compares them.','If they match, the destination is a neighbour on the same switch and the PC sends directly. If they differ, the PC cannot reach it alone, so it sends the packet to its <strong>default gateway</strong>: the router port on its own LAN.','Two rules follow. A PC with no gateway can only talk to its own office. And the gateway address must itself be inside the PC\'s subnet, otherwise the PC cannot reach the gateway either.'),
+   demo('Compare two addresses',el('div',{style:'display:flex;gap:.8rem;flex-wrap:wrap;align-items:end'},el('div',{class:'field'},el('label',{for:'gw-a'},'PC address'),a),el('div',{class:'field'},el('label',{for:'gw-d'},'Destination'),d),el('div',{class:'field'},el('label',{for:'gw-p'},'Prefix'),pp)),out)];},
+ worked:['<strong>PC 10.47.0.10/27 wants to reach 10.47.0.40. Direct, or via the gateway?</strong>','/27 has a block size of 256 − 224 = 32. Subnets start at 0, 32, 64…','The PC has 10 in the last octet. That falls in the block 0 to 31, so its network is 10.47.0.<strong>0</strong>.','The destination has 40. That falls in the block 32 to 63, so its network is 10.47.0.<strong>32</strong>.','0 and 32 are different networks. The PC sends the packet to its default gateway.','Which address could that gateway be? It has to be a usable address in the PC\'s own block: anything from 10.47.0.1 to 10.47.0.30. By convention it is the first one, <code>10.47.0.1</code>.'],
+ gen:()=>{const p=rnd(25,29),B=Math.pow(2,32-p),base=((10<<24)|(rnd(1,99)<<16)|(rnd(0,9)<<8))>>>0,blk=rnd(0,256/B-2),n=base+blk*B,pc=n+rnd(2,B-2);
+  if(Math.random()<.55){const same=Math.random()<.5,dn=same?n:(blk+1)*B+base;let d;do{d=dn+rnd(1,B-2);}while(d===pc);return{type:'choice',prompt:`A PC has the address <span class="big">${int2ip(pc)}/${p}</span>It sends a packet to <strong class="mono">${int2ip(d)}</strong>. Where does the packet go first?`,opts:['Straight to the destination on its own LAN','To the default gateway'],a:same?0:1,work:[`Block size for /${p} is ${B}. Subnets start at multiples of ${B}.`,`The PC (${pc&255}) is in the block ${n&255} to ${(n&255)+B-1}.`,`The destination (${d&255}) is in the block ${dn&255} to ${(dn&255)+B-1}.`,same?'Same block, so same subnet: the PC delivers it directly.':'Different blocks, so different subnets: the PC uses its gateway.']};}
+  const good=n+1,opts=shuffle([int2ip(good),int2ip(n),int2ip(n+B-1),int2ip(n+B+1)]);return{type:'choice',prompt:`A PC has the address <span class="big">${int2ip(pc)}/${p}</span>Which of these could be its default gateway?`,opts,a:opts.indexOf(int2ip(good)),work:[`Block size for /${p} is ${B}. The PC's subnet runs from ${int2ip(n)} (network) to ${int2ip(n+B-1)} (broadcast).`,`A gateway must be a usable address inside that subnet: ${int2ip(n+1)} to ${int2ip(n+B-2)}.`,`${int2ip(n)} is the network address, ${int2ip(n+B-1)} is the broadcast, and ${int2ip(n+B+1)} is in the next subnet. Only <strong>${int2ip(good)}</strong> works.`]};}});
+
+C.push({id:'sizing',group:'Addressing',title:'Choosing a subnet size',mins:4,
+ learn:()=>[prose('Your brief asks for a <strong>frugal</strong> addressing scheme. Frugal means each subnet is the smallest size that still fits. The method is three steps:'),
+  el('ol',null,el('li',{html:'Count the devices on that LAN that need an address: PCs, laptops, servers.'}),el('li',{html:'Add <strong>1</strong> for the router port, which is the gateway. (A link between two routers needs exactly 2 and nothing else.)'}),el('li',{html:'Pick the smallest row of this table whose "usable" number is at least that total.'})),
+  el('div',{class:'tablewrap'},el('table',{html:'<tr><th>Prefix</th><th class="num">Host bits</th><th class="num">Addresses</th><th class="num">Usable</th></tr>'+[30,29,28,27,26,25,24].map(p=>`<tr><td class="mono">/${p}</td><td class="num">${32-p}</td><td class="num">${Math.pow(2,32-p)}</td><td class="num"><strong>${Math.pow(2,32-p)-2}</strong></td></tr>`).join('')})),
+  el('p',{class:'note'},'The classic mistake is forgetting the gateway. 14 PCs do not fit in a /28: 14 PCs plus the router port is 15, and a /28 only has 14 usable.')],
+ worked:['<strong>An office has 10 PCs and may host up to 10 roaming laptops. What subnet?</strong>','Devices: 10 + 10 = 20.','Add the router port: 21 addresses needed.','A /28 has 14 usable. Too small. A /27 has 30 usable. That fits.','Answer: <strong>/27</strong>, with 30 − 21 = 9 addresses spare for growth.'],
+ gen:()=>{if(Math.random()<.15)return{type:'fields',prompt:'Two routers are joined by a serial cable. Nothing else is on that link. What prefix fits exactly?',fields:[{label:'Prefix (just the number)',ans:'30',kind:'num'},{label:'Usable addresses',ans:'2',kind:'num'}],work:['A point-to-point link has two devices, one at each end.','A /30 has 4 addresses: network, two usable, broadcast. Nothing is wasted.']};
+  const d=pick([rnd(2,6),rnd(7,14),rnd(12,16),rnd(17,30),rnd(28,34),rnd(35,62),rnd(60,70),rnd(71,120)]),need=d+1,h=hostBitsFor(need),p=32-h,u=Math.pow(2,h)-2,sm=Math.pow(2,h-1)-2;
+  return{type:'fields',prompt:`An office LAN has <strong>${d} devices</strong>, plus the router port that acts as their gateway. What is the smallest subnet that fits?`,fields:[{label:'Prefix (just the number)',ans:String(p),kind:'num'},{label:'Usable addresses in it',ans:String(u),kind:'num'}],work:[`${d} devices + 1 gateway = <strong>${need}</strong> addresses needed.`,`A /${p+1} has only ${sm} usable, which is too few.`,`A /${p} has ${Math.pow(2,h)} − 2 = <strong>${u}</strong> usable, which fits with ${u-need} spare.`]};}});
+
+C.push({id:'vlsm',group:'Addressing',title:'VLSM: carving up a block',mins:7,
+ learn:()=>[prose('VLSM means your subnets can be different sizes. That is what lets an office of 20 and a two-address router link sit side by side without waste. Once you can size one subnet, VLSM is just doing it several times in the right order:'),
+  el('ol',null,el('li',null,'Size every network (devices + 1 gateway, then the smallest prefix that fits).'),el('li',{html:'<strong>Sort them biggest first.</strong>'}),el('li',null,'Give the first one the start of your block.'),el('li',null,'Each next subnet starts at the address straight after the previous one\'s broadcast: previous start plus previous block size.')),
+  prose('Why biggest first? A subnet must start on a multiple of its own size. Going from big to small, every starting point is automatically a valid multiple, so nothing overlaps and there are no gaps.'),
+  el('p',{class:'note blue'},'The Plan tab in the full NetLab app does this for your real numbers. Doing a few by hand here means you can explain the table in your report.')],
+ worked:['<strong>Carve 10.47.0.0/24 for: Sales 25 devices, Admin 12 devices, a router link.</strong>','Size each. Sales: 25 + 1 = 26, needs a /27 (block of 32). Admin: 12 + 1 = 13, needs a /28 (block of 16). Router link: /30 (block of 4).','Biggest first: Sales, Admin, link.','Sales starts at the beginning: <code>10.47.0.0/27</code>. It covers .0 to .31.','Admin starts straight after, at 0 + 32: <code>10.47.0.32/28</code>. It covers .32 to .47.','The link starts at 32 + 16: <code>10.47.0.48/30</code>. It covers .48 to .51.','Used: 52 addresses of 256. Everything after .51 is free for later.'],
+ gen:()=>{const names=shuffle(['Sales','Admin','Design','Support','Finance','Warehouse']),hs=shuffle([3,4,5,6]).slice(0,3),base=((10<<24)|(rnd(1,99)<<16)|(rnd(0,200)<<8))>>>0;
+  const nets=hs.map((h,i)=>{const max=Math.pow(2,h)-3,min=Math.pow(2,h-1)-1;return{name:names[i],dev:rnd(Math.max(2,min),max),h};});const order=nets.slice().sort((a,b)=>b.h-a.h);let cur=base;order.forEach(n=>{n.net=cur;n.p=32-n.h;cur+=Math.pow(2,n.h);});
+  return{type:'fields',prompt:`Carve up <span class="big">${int2ip(base)}/24</span>for these three LANs. Each also needs one address for its gateway. Allocate biggest first, starting at the beginning of the block, and give each subnet as <code>address/prefix</code>.`,fields:nets.map(n=>({label:`${n.name}: ${n.dev} devices`,ans:`${int2ip(n.net)}/${n.p}`,kind:'cidr'})),
+   work:[order.map(n=>`${n.name}: ${n.dev} + 1 = ${n.dev+1} needed, so /${n.p} (block of ${Math.pow(2,n.h)})`).join('<br>'),`Biggest first: ${order.map(n=>n.name).join(', ')}.`,...order.map((n,i)=>`${n.name} starts at ${i?`${int2ip(order[i-1].net).split('.')[3]} + ${Math.pow(2,order[i-1].h)} = `:'the beginning: '}<code>${int2ip(n.net)}/${n.p}</code>, covering .${n.net&255} to .${(n.net&255)+Math.pow(2,n.h)-1}.`)]};}});
+
+C.push({id:'wildcards',group:'Addressing',title:'Wildcard masks',mins:4,
+ learn:()=>[prose('Access control lists (ACLs), which you may use as your security feature, describe a range of addresses with a <strong>wildcard mask</strong> where you would expect a subnet mask. A wildcard is simply the subnet mask turned inside out.','<strong>Wildcard = 255.255.255.255 − subnet mask</strong>, one octet at a time. So 255.255.255.224 becomes 0.0.0.31.','Read it like this: a 0 means "this part must match exactly", and anything else means "do not care about these bits". The handy coincidence is that the wildcard\'s last number is the block size minus one.'),
+  el('div',{class:'tablewrap'},el('table',{html:'<tr><th>Prefix</th><th>Subnet mask</th><th>Wildcard</th><th>Matches</th></tr><tr><td class="mono">/24</td><td class="mono">255.255.255.0</td><td class="mono">0.0.0.255</td><td>256 addresses</td></tr><tr><td class="mono">/27</td><td class="mono">255.255.255.224</td><td class="mono">0.0.0.31</td><td>32 addresses</td></tr><tr><td class="mono">/28</td><td class="mono">255.255.255.240</td><td class="mono">0.0.0.15</td><td>16 addresses</td></tr><tr><td class="mono">/30</td><td class="mono">255.255.255.252</td><td class="mono">0.0.0.3</td><td>4 addresses</td></tr>'})),
+  el('div',{class:'clicky'},'access-list 10 permit 10.47.0.32 0.0.0.31'),
+  prose('That line permits any source from 10.47.0.32 up to 10.47.0.63: the start address, plus 31 more.')],
+ worked:['<strong>Does "access-list 10 permit 10.47.0.32 0.0.0.31" match the source 10.47.0.70?</strong>','The wildcard 0.0.0.31 means the first three octets must match exactly and the last may vary by up to 31.','So the entry covers 10.47.0.32 up to 10.47.0.32 + 31 = 10.47.0.<strong>63</strong>.','70 is above 63. <strong>No match.</strong> The router moves to the next line of the list, and if no line matches, the packet is dropped by the hidden "deny any" at the end.'],
+ gen:()=>{const p=pick([20,22,23,24,25,26,27,28,29,30]),m=maskOf(p),w=(~m)>>>0;if(Math.random()<.45){const k=Math.min(3,Math.floor((p-1)/8)),mo=(m>>>(24-k*8))&255;return{type:'fields',prompt:`What is the wildcard mask for this subnet mask?<span class="big">${int2ip(m)}</span>`,fields:[{label:'Wildcard mask',ans:int2ip(w),kind:'ip'}],work:['Subtract each octet from 255.',`255 − 255 = 0 for the full octets. 255 − ${mo} = ${255-mo}. 255 − 0 = 255.`,`Wildcard: <code>${int2ip(w)}</code>`]};}
+  const q=pick([25,26,27,28,29]),B=Math.pow(2,32-q),base=((10<<24)|(rnd(1,99)<<16)|(rnd(0,9)<<8))>>>0,blk=rnd(0,256/B-2),n=base+blk*B,hit=Math.random()<.5,t=hit?n+rnd(0,B-1):n+B+rnd(0,B-1);
+  return{type:'choice',prompt:`A router has this line:<span class="big">access-list 10 permit ${int2ip(n)} ${int2ip(B-1)}</span>A packet arrives from <strong class="mono">${int2ip(t)}</strong>. Does the line match it?`,opts:['Yes, it matches','No, it does not match'],a:hit?0:1,work:[`The wildcard 0.0.0.${B-1} lets the last octet vary by up to ${B-1}.`,`The line covers ${int2ip(n)} to ${int2ip(n+B-1)}.`,`${int2ip(t)} is ${hit?'inside':'outside'} that range, so it ${hit?'matches':'does not match'}.`]};}});
+
+C.push({id:'frames',group:'Moving packets',title:'MAC addresses, ARP and TTL',mins:6,
+ learn:()=>{const hops=[['PC-A puts the packet in a frame for its gateway','10.47.0.2','10.47.0.34','PC-A','Manchester router','128'],['Manchester router forwards it over the WAN','10.47.0.2','10.47.0.34','(serial link, no MAC needed)','London router','127'],['London router puts it in a frame for PC-B','10.47.0.2','10.47.0.34','London router','PC-B','126']];let n=0;const tb=el('table'),b=el('button',{class:'btn primary',type:'button',onclick:()=>{n=(n+1)%3;draw();}});
+  const draw=()=>{tb.innerHTML='<tr><th>Hop</th><th>From IP</th><th>To IP</th><th>From MAC</th><th>To MAC</th><th class="num">TTL</th></tr>'+hops.map((h,i)=>`<tr class="${i===n?'hl':''}"><td>${i<=n?h[0]:'…'}</td>${h.slice(1,5).map(x=>`<td class="${i<=n?'':'muted'}">${i<=n?x:'·'}</td>`).join('')}<td class="num">${i<=n?h[5]:'·'}</td></tr>`).join('');b.textContent=n===2?'Start again':'Next hop';};draw();
+  return [prose('Every device has two addresses, and they do different jobs. The <strong>IP address</strong> says where the packet is ultimately going. The <strong>MAC address</strong> is burned into the network card and says which device on <em>this LAN</em> gets the frame next.','A PC knows the IP it wants to reach, but to put a frame on the wire it needs a MAC. So it shouts to the whole LAN: "Who has 10.47.0.1? Tell me your MAC." That shout is an <strong>ARP request</strong>. The owner replies, and the PC remembers the answer. This is why the very first ping to a new address often times out: the packet was waiting for ARP.','ARP is a broadcast, and routers never pass broadcasts on. So a PC can only ARP for neighbours. To reach another network, it ARPs for its <em>gateway\'s</em> MAC and sends the frame there.'),
+   demo('Follow a packet from Manchester to London',el('div',{class:'tablewrap'},tb),el('div',null,b)),
+   prose('Notice what changed and what did not. The IP addresses stay the same the whole way. The MAC addresses are replaced at every router. And the <strong>TTL</strong> (time to live) drops by 1 at each router, which stops a lost packet circling forever. A Packet Tracer PC starts replies at 128 and a router at 255, so a reply showing TTL=126 crossed two routers.')];},
+ gen:()=>{if(Math.random()<.4){const r=rnd(0,4),start=pick([128,128,255]);return{type:'fields',prompt:`A ${start===128?'PC':'router'} sends a ping reply starting with TTL ${start}. The reply crosses <strong>${r} router${r===1?'':'s'}</strong> on its way back. What TTL does the ping output show?`,fields:[{label:'TTL',ans:String(start-r),kind:'num'}],work:['Each router the packet passes through subtracts 1.',`${start} − ${r} = <strong>${start-r}</strong>`]};}
+  return FRAME_BANK();}});
+const FRAME_BANK=bank([
+ {q:'A PC knows the IP of a neighbour on its LAN but not its MAC address. What does it do?',o:['Broadcasts an ARP request','Asks the DNS server','Sends the packet to every router'],why:'ARP exists for exactly this: turning an IP on the local LAN into a MAC address.'},
+ {q:'As a packet crosses a router, which addresses are replaced?',o:['The MAC addresses','The IP addresses','Both'],why:'MAC addresses only matter for one hop, so each router writes new ones. The IP addresses stay the same end to end.'},
+ {q:'Who receives an ARP request?',o:['Every device on that LAN','Only the default gateway','Every device in both cities'],why:'It is a broadcast, so the whole LAN hears it. Routers do not forward broadcasts, so it goes no further.'},
+ {q:'A PC is sending to an address in another city. Whose MAC address does it ARP for?',o:['Its default gateway\'s','The destination PC\'s','The DNS server\'s'],why:'ARP cannot cross a router. The PC only needs to get the frame as far as its gateway.'},
+ {q:'The first of four pings says "Request timed out" and the other three succeed. Why?',o:['ARP was still finding a MAC address','The cable is faulty','The destination was asleep'],why:'The first packet was dropped while a device on the path waited for an ARP reply. It is normal the first time.'},
+ {q:'What does a switch look at to decide which port a frame leaves from?',o:['The destination MAC address','The destination IP address','The TTL'],why:'Switches are layer 2 devices. They learn which MAC is on which port and forward by MAC.'},
+ {q:'What is the TTL for?',o:['Stopping packets circulating forever','Measuring how fast the link is','Encrypting the packet'],why:'Each router subtracts 1. At zero the packet is thrown away, so a routing loop cannot run for ever.'}]);
+
+C.push({id:'routing',group:'Moving packets',title:'Reading a routing table',mins:6,
+ learn:()=>[prose('A router\'s whole job is one lookup. For each packet it reads the destination IP, looks down its <strong>routing table</strong>, and sends the packet out of the port the table names.','Each line of the table is "to reach this network, go this way". Lines come from two places. <strong>C</strong> lines are networks plugged into the router itself. <strong>R</strong> lines were learned from a neighbouring router by RIP.'),
+  el('div',{class:'clicky'},'C    10.47.0.0/27   is directly connected, GigabitEthernet0/1\nC    10.47.0.64/28  is directly connected, GigabitEthernet0/2\nR    10.47.0.32/27  [120/1] via 10.47.0.102, Serial0/0/0\nR    10.47.0.80/28  [120/1] via 10.47.0.102, Serial0/0/0'),
+  prose('To use it, test the destination against each line: is the address inside that network? Use the block-size method from the subnetting drill.','If more than one line matches, the <strong>most specific</strong> one wins: the one with the longest prefix. A /28 beats a /24, because it describes a smaller, more exact group of addresses.','If no line matches, the router has nowhere to send the packet. It drops it and replies "Destination host unreachable". When that happens between your two cities, it nearly always means RIP has not shared the route.')],
+ worked:['<strong>Using the table above, where does a packet for 10.47.0.85 go?</strong>','10.47.0.0/27 covers .0 to .31. No.','10.47.0.64/28 covers .64 to .79. No.','10.47.0.32/27 covers .32 to .63. No.','10.47.0.80/28 covers .80 to .95. <strong>Yes.</strong>','The packet leaves through Serial0/0/0 towards 10.47.0.102, the router at the other end of the WAN link.'],
+ gen:()=>{const a=rnd(1,99),b=rnd(0,9),base=((10<<24)|(a<<16)|(b<<8))>>>0,other=((10<<24)|(a<<16)|((b+1)<<8))>>>0;
+  const R=[{net:base,p:24,txt:'via Serial0/0/0',code:'R'},{net:base+pick([64,128,192]),p:26,txt:'GigabitEthernet0/1',code:'C'},{net:other+pick([0,32,96]),p:27,txt:'GigabitEthernet0/2',code:'C'}];
+  const kind=rnd(0,3);let dst;if(kind===0)dst=R[1].net+rnd(1,62);else if(kind===1){do{dst=base+rnd(1,254);}while(netOf(dst,26)===R[1].net);}else if(kind===2)dst=R[2].net+rnd(1,30);else{do{dst=other+rnd(1,254);}while(netOf(dst,27)===R[2].net);}
+  const m=R.map(r=>netOf(dst,r.p)===r.net);let best=-1;m.forEach((x,i)=>{if(x&&(best<0||R[i].p>R[best].p))best=i;});
+  const opts=R.map(r=>`${int2ip(r.net)}/${r.p} (${r.txt})`).concat('No route matches: the packet is dropped');
+  return{type:'choice',prompt:`A router has this table:<div class="clicky" style="margin:.5rem 0">${R.map(r=>`${r.code}    ${(int2ip(r.net)+'/'+r.p).padEnd(17)} ${r.code==='R'?'[120/1] ':'is directly connected, '}${r.txt}`).join('\n')}</div>A packet arrives for <strong class="mono">${int2ip(dst)}</strong>. Which line does the router use?`,opts,a:best<0?3:best,
+   work:[...R.map((r,i)=>`${int2ip(r.net)}/${r.p} covers ${int2ip(r.net)} to ${int2ip(bcOf(r.net,r.p))}: ${m[i]?'<strong>matches</strong>':'no match'}.`),best<0?'Nothing matches, so the router drops the packet and reports the destination unreachable.':m.filter(Boolean).length>1?`Two lines match. The longer prefix, /${R[best].p}, is more specific and wins.`:'One line matches, so that is the one used.']};}});
+
+const PROMPTS=['Router>','Router#','Router(config)#','Router(config-if)#','Router(config-router)#','Router(config-line)#'];
+const CMDS=[['enable',0,'It is how you leave user mode, so it is typed at the > prompt.'],['show ip route',1,'show commands belong in privileged mode (#).'],['show running-config',1,'show commands belong in privileged mode (#).'],['configure terminal',1,'You enter configuration from privileged mode (#).'],['copy running-config startup-config',1,'Saving is done from privileged mode (#).'],['hostname MAN-R1',2,'The name applies to the whole router, so it is a global configuration command.'],['enable secret Str0ng-Pass',2,'It protects the whole router, so it is global configuration.'],['username admin secret Str0ng-Pass',2,'User accounts belong to the whole router: global configuration.'],['crypto key generate rsa',2,'The keys belong to the whole router: global configuration.'],['access-list 10 permit 10.47.0.0 0.0.0.31',2,'ACLs are created in global configuration, then applied somewhere else.'],['router rip',2,'You type this in global configuration to enter RIP\'s own mode.'],['interface g0/1',2,'You type this in global configuration to enter that port\'s mode.'],['ip address 10.47.0.1 255.255.255.224',3,'An address belongs to one port, so it goes in interface configuration.'],['no shutdown',3,'It switches one port on, so it goes in interface configuration.'],['ip access-group 10 in',3,'It applies an ACL to one port: interface configuration.'],['version 2',4,'It is a RIP setting: router configuration.'],['network 10.0.0.0',4,'It is a RIP setting: router configuration.'],['no auto-summary',4,'It is a RIP setting: router configuration.'],['passive-interface g0/1',4,'It is a RIP setting, even though it names a port: router configuration.'],['transport input ssh',5,'It controls remote logins, which arrive on the vty lines: line configuration.'],['login local',5,'It controls how remote logins are checked: line configuration.'],['access-class 10 in',5,'It applies an ACL to remote logins: line configuration.']];
+C.push({id:'prompts',group:'Routers',title:'Router prompts and modes',mins:5,
+ learn:()=>{const M={0:['User mode. Look, but do not touch.',[['enable',1]]],1:['Privileged mode. Every show command, and saving. Changes nothing.',[['configure terminal',2],['disable',0]]],2:['Global configuration. Settings for the whole router.',[['interface g0/1',3],['router rip',4],['line vty 0 4',5],['exit',1]]],3:['Interface configuration. Settings for one port.',[['exit',2],['end',1]]],4:['Router configuration. RIP settings.',[['exit',2],['end',1]]],5:['Line configuration. Rules for remote logins.',[['exit',2],['end',1]]]};let cur=0;const pr=el('div',{class:'clicky'}),d=el('div',{class:'out'}),bs=el('div',{class:'chips'});const draw=()=>{pr.textContent=PROMPTS[cur];d.textContent=M[cur][0];bs.replaceChildren(...M[cur][1].map(([c,to])=>el('button',{class:'chip mono',type:'button',onclick:()=>{cur=to;draw();}},c)));};draw();
+  return [prose('You configure a Cisco router by typing commands. The router is always in one <strong>mode</strong>, the prompt tells you which, and <strong>each command only works in its own mode</strong>. Typing a correct command in the wrong mode gives "Invalid input", which is the most common beginner error.','Think of it as rooms in a building. You walk in through user mode, go up to privileged mode, then into the configuration room, and from there into smaller rooms for one port, for RIP, or for remote logins.'),
+   demo('Walk through the modes',pr,bs,d),
+   el('div',{class:'tablewrap'},el('table',{html:'<tr><th>Prompt</th><th>What belongs here</th></tr><tr><td class="mono">Router&gt;</td><td>enable, ping</td></tr><tr><td class="mono">Router#</td><td>show commands, configure terminal, copy running-config startup-config</td></tr><tr><td class="mono">Router(config)#</td><td>hostname, enable secret, username, access-list, crypto key</td></tr><tr><td class="mono">Router(config-if)#</td><td>ip address, no shutdown, ip access-group</td></tr><tr><td class="mono">Router(config-router)#</td><td>version 2, network, no auto-summary</td></tr><tr><td class="mono">Router(config-line)#</td><td>login local, transport input ssh, access-class</td></tr>'})),
+   prose('To decide where a command goes, ask what it affects: the whole router, one port, RIP, or remote logins.')];},
+ gen:(()=>{let last=-1;return()=>{let i;do{i=rnd(0,CMDS.length-1);}while(i===last);last=i;const c=CMDS[i];return{type:'choice',prompt:`At which prompt do you type this command?<span class="big">${esc(c[0])}</span>`,opts:PROMPTS,a:c[1],work:[c[2]]};};})()});
+
+C.push({id:'faults',group:'Routers',title:'Finding the fault',mins:6,
+ learn:()=>[prose('Things will not work first time, and your report gets credit for showing that you can find out why. The method is always the same: <strong>test from the inside out</strong>, and stop at the first step that fails. The fault is between the last thing that worked and the first thing that did not.'),
+  el('div',{class:'steps'},el('div',{html:'<code>ipconfig</code> on the PC. Are the IP, mask and gateway what your plan says?'}),el('div',{html:'Ping the PC\'s <strong>own gateway</strong>. Fails? The problem is inside the office: cable, PC settings, or the router port is shut down or unaddressed.'}),el('div',{html:'Ping the <strong>far end of the WAN link</strong>. Fails? The serial link or its addresses.'}),el('div',{html:'Ping a <strong>PC in the other city</strong>. Fails? Routing: look at <code>show ip route</code> for R lines.'}),el('div',{html:'Only now try <strong>names and services</strong>. If the IP works but the name does not, it is DNS.'})),
+  prose('Three router commands answer most questions: <code>show ip interface brief</code> (is each port addressed and up?), <code>show ip route</code> (does the router know the way?), and <code>show running-config</code> (what did I actually type?). On a PC, <code>tracert</code> shows the last router a packet reached.')],
+ gen:bank([
+  {q:'A PC can ping everything in its own office but nothing else, not even its gateway\'s other ports.',o:['The PC\'s default gateway is missing or wrong','RIP is misconfigured','The DNS server is down'],why:'Local delivery needs no gateway. Everything beyond the subnet does. Check ipconfig first.'},
+  {q:'The link lights between a switch and the router stay red.',o:['The router port has not had "no shutdown"','The PCs have no DNS server','RIP is version 1'],why:'Router ports are switched off until you enable them. A red light is a layer 1 and 2 problem, so look at the port, not at routing.'},
+  {q:'A Manchester PC pings a London PC and gets "Reply from 10.47.0.1: Destination host unreachable", where 10.47.0.1 is its own gateway.',o:['The Manchester router has no route to the London network','The London PC is switched off','The PC\'s cable is unplugged'],why:'The gateway itself answered, so the PC and its LAN are fine. The router is saying it does not know the way: check show ip route and RIP.'},
+  {q:'show ip route on a router lists only C and L lines.',o:['It has learned nothing from RIP','It is working perfectly','An ACL is blocking pings'],why:'No R lines means no routes from the neighbour. Check the network statements, that both routers use version 2, and that the serial link is up.'},
+  {q:'A PC can ping the server at 10.47.0.98, but the browser cannot open www.company.local.',o:['A DNS problem: the PC\'s DNS setting or the record','A routing problem','A faulty cable'],why:'The ping proves the path works. Only the name-to-address step fails, and that is DNS.'},
+  {q:'The first ping to a new address times out, then every one after succeeds.',o:['Nothing is wrong: ARP was resolving','The WAN link is unreliable','The subnet mask is wrong'],why:'One lost packet on the first attempt is ARP at work. Ping again and you get four out of four.'},
+  {q:'After you configure SSH, telnet to the router says the connection was closed.',o:['That is correct: Telnet is now disabled','SSH has broken the router','The router has no IP address'],why:'"transport input ssh" turns Telnet off. A refused Telnet is the evidence you want in your report.'},
+  {q:'SSH to a router is refused, and "show ip ssh" says SSH is disabled.',o:['The RSA keys were never generated','The PC has the wrong gateway','RIP has not converged'],why:'The SSH server only starts once the router has a hostname, a domain name and keys from "crypto key generate rsa".'},
+  {q:'A laptop will not join the Wi-Fi.',o:['Its SSID or WPA2 key does not match the access point','Its default gateway is wrong','The router needs "no auto-summary"'],why:'Joining Wi-Fi comes before any IP settings matter. SSID and key must match exactly, including capitals.'},
+  {q:'You apply an ACL with one "permit" line to a port, and suddenly other traffic through that port stops.',o:['The hidden "deny any" at the end is dropping it','ACLs disable RIP','The port shut itself down'],why:'Every ACL ends with an invisible deny. Anything you did not explicitly permit is blocked.'},
+  {q:'Two PCs in one office have been given the same IP address.',o:['An address conflict: both become unreliable','They share the connection','Only the switch is affected'],why:'Addresses must be unique. With a duplicate, replies go to whichever PC answered ARP last.'},
+  {q:'A PC has IP 10.47.0.70/28 and gateway 10.47.0.1. It cannot reach other networks.',o:['The gateway is outside the PC\'s subnet','The mask should be 255.0.0.0','It needs a DNS server'],why:'A /28 block containing .70 runs from .64 to .79. The gateway must be in that range, such as 10.47.0.65.'}])});
+
+/* ---------- state ---------- */
+const KEY='netlab.basics.v1',GOAL=5;let S={v:1,p:{},last:'networks'},storageOK=true;
+try{const r=JSON.parse(localStorage.getItem(KEY)||'null');if(r&&r.v===1)S=Object.assign(S,r);}catch(e){storageOK=false;}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));storageOK=true;}catch(e){storageOK=false;}};
+const P=id=>S.p[id]||(S.p[id]={streak:0,done:false,tries:0,right:0});
+let cur=null,stage=0,level=0,Q=null,wstep=1;
+
+function meta(){const d=C.filter(c=>P(c.id).done).length;$('#meta').innerHTML=`${d} of ${C.length} concepts mastered<br>${storageOK?'Progress is saved in this browser':'Storage is unavailable: progress lasts until you close this page'}`;}
+function drawList(){const nav=$('#list'),kids=[];let g='';C.forEach((c,i)=>{if(c.group!==g){g=c.group;kids.push(el('div',{class:'grp'},g));}const p=P(c.id),dots=el('span',{class:'dots'+(p.done?' done':''),title:p.done?'Mastered':`${p.streak} of ${GOAL} in a row`});for(let k=0;k<GOAL;k++)dots.append(el('i',{class:p.done||k<p.streak?'on':''}));kids.push(el('button',{type:'button','aria-current':cur&&cur.id===c.id,onclick:()=>open(c.id,0)},dots,el('span',null,c.title)));});nav.replaceChildren(...kids);const a=nav.querySelector('[aria-current=true]');if(a&&nav.scrollWidth>nav.clientWidth)nav.scrollLeft=a.offsetLeft-16;meta();}
+function open(id,st){cur=C.find(c=>c.id===id)||C[0];stage=st||0;level=0;Q=null;wstep=1;S.last=cur.id;save();try{history.replaceState(null,'','#'+cur.id);}catch(e){}drawList();draw();window.scrollTo(0,0);}
+const stages=()=>cur.worked?['Learn it','Watch it done','Your turn']:['Learn it','Your turn'];
+function draw(){
+  const i=C.indexOf(cur),st=stages(),sheet=$('#sheet'),name=st[stage],kids=[el('div',{class:'kick'},`${cur.group} · concept ${i+1} of ${C.length} · about ${cur.mins} min to learn`),el('h2',null,cur.title),
+   el('div',{class:'stepper',role:'tablist'},st.map((s,k)=>el('button',{type:'button',role:'tab','aria-selected':k===stage,onclick:()=>{stage=k;draw();window.scrollTo(0,0);}},el('span',{class:'n'},String(k+1)),s)))];
+  if(name==='Learn it'){kids.push(...cur.learn(),el('div',null,el('button',{class:'btn primary',type:'button',onclick:()=>{stage=1;draw();window.scrollTo(0,0);}},cur.worked?'Watch a worked example':'Try some questions')));}
+  else if(name==='Watch it done'){const box=el('div',{class:'steps'}),more=el('button',{class:'btn primary',type:'button'}),all=cur.worked;const paint=()=>{box.replaceChildren(...all.slice(1,wstep).map(h=>el('div',{html:h})));more.textContent=wstep<all.length?(wstep===1?'Show the first step':'Next step'):'Now you try';};more.addEventListener('click',()=>{if(wstep<all.length){wstep++;paint();}else{stage=2;draw();window.scrollTo(0,0);}});
+   kids.push(el('p',{class:'note blue',html:all[0]}),prose('Try to guess each step before you reveal it.'),box,el('div',null,more));paint();}
+  else kids.push(...practice());
+  kids.push(el('div',{class:'navrow'},el('button',{class:'btn',type:'button',disabled:i===0,onclick:()=>open(C[i-1].id,0)},'Previous concept'),el('button',{class:'btn',type:'button',disabled:i===C.length-1,onclick:()=>open(C[Math.min(i+1,C.length-1)].id,0)},i<C.length-1?'Next: '+C[i+1].title:'Last concept')));
+  sheet.replaceChildren(...kids);
+}
+function check(f,v){v=String(v).trim();if(!v)return false;if(f.kind==='ip'){const a=ip2int(v);return a!=null&&a===ip2int(f.ans);}if(f.kind==='num')return /^\/?\d+$/.test(v)&&+v.replace('/','')===+f.ans;if(f.kind==='bin'){const b=v.replace(/[\s.]/g,'');return /^[01]{1,8}$/.test(b)&&parseInt(b,2)===parseInt(f.ans,2);}if(f.kind==='cidr'){const m=/^([\d.]+)\s*\/\s*(\d+)$/.exec(v),e=f.ans.split('/');return !!m&&ip2int(m[1])===ip2int(e[0])&&+m[2]===+e[1];}return v.toLowerCase()===f.ans.toLowerCase();}
+function practice(){
+  const p=P(cur.id);if(!Q)Q={q:cur.gen(level),scored:false,solved:false,shown:0};const q=Q.q,out=[];
+  if(cur.levels)out.push(el('div',{class:'chips'},cur.levels.map((l,k)=>el('button',{class:'chip',type:'button','aria-pressed':k===level,onclick:()=>{level=k;Q=null;draw();}},l))));
+  const dots=el('span',{class:'dots'+(p.done?' done':'')});for(let k=0;k<GOAL;k++)dots.append(el('i',{class:k<p.streak||(p.done&&p.streak>=GOAL)?'on':''}));
+  const streak=el('div',{class:'streak'},dots,el('span',null,p.done?`Mastered. Current run: ${p.streak}. ${p.right} right out of ${p.tries} so far.`:`${p.streak} of ${GOAL} in a row. Get ${GOAL} right first time, without hints, to master this concept.`));
+  const fb=el('div'),work=el('div',{class:'steps'}),task=el('div',{class:'task'},el('div',{class:'prompt',html:q.prompt}));
+  const score=ok=>{if(Q.scored)return;Q.scored=true;p.tries++;if(ok){p.right++;p.streak++;if(p.streak>=GOAL)p.done=true;}else p.streak=0;save();drawList();};
+  const showWork=n=>{Q.shown=Math.max(Q.shown,n);work.replaceChildren(...q.work.slice(0,Q.shown).map(h=>el('div',{html:h})));};
+  const next=el('button',{class:'btn primary',type:'button',onclick:()=>{Q=null;draw();const f=$('#sheet .task input');if(f)f.focus();}},'Next question');
+  const hintB=el('button',{class:'btn',type:'button',onclick:()=>{score(false);showWork(Q.shown+1);if(Q.shown>=q.work.length)hintB.disabled=true;refresh();}},q.work.length>1?'Give me a hint':'Explain');
+  const allB=el('button',{class:'btn',type:'button',onclick:()=>{score(false);showWork(q.work.length);hintB.disabled=true;reveal();refresh();}},'Show the working');
+  const refresh=()=>{streak.lastChild.textContent=p.done?`Mastered. Current run: ${p.streak}. ${p.right} right out of ${p.tries} so far.`:`${p.streak} of ${GOAL} in a row. Get ${GOAL} right first time, without hints, to master this concept.`;[...dots.children].forEach((d,k)=>d.className=k<Math.min(p.streak,GOAL)?'on':'');dots.className='dots'+(p.done?' done':'');};
+  let reveal=()=>{};
+  if(q.type==='fields'){
+    const rows=q.fields.map((f,k)=>{const inp=el('input',{type:'text',id:'f'+k,autocomplete:'off',autocapitalize:'off',spellcheck:'false',inputmode:f.kind==='cidr'||f.kind==='ip'?'decimal':'numeric'}),mark=el('span',{class:'mark'});return{f,inp,mark,node:el('div',{class:'field'},el('label',{for:'f'+k},f.label),el('div',{class:'row'},inp,mark))};});
+    const doCheck=()=>{if(Q.solved)return next.click();let all=true;rows.forEach(r=>{const ok=check(r.f,r.inp.value);all=all&&ok;r.inp.className=ok?'right':'wrong';r.mark.textContent=ok?'ok':'no';r.mark.className='mark '+(ok?'ok':'no');});score(all);if(all){Q.solved=true;fb.replaceChildren(el('p',{class:'note ok'},p.streak>=GOAL&&p.done&&p.streak===GOAL?'Correct, and that is five in a row: concept mastered.':'Correct.'));showWork(q.work.length);chk.replaceWith(next);next.focus();}else fb.replaceChildren(el('p',{class:'note bad'},'Not yet. The boxes marked "no" need another look. Fix them and check again, or ask for a hint.'));refresh();};
+    const chk=el('button',{class:'btn primary',type:'button',onclick:doCheck},'Check');rows.forEach(r=>r.inp.addEventListener('keydown',e=>{if(e.key==='Enter')doCheck();}));
+    reveal=()=>{rows.forEach(r=>{if(!check(r.f,r.inp.value)){r.inp.value=r.f.ans;r.inp.className='';r.mark.textContent='';}});Q.solved=true;chk.replaceWith(next);};
+    task.append(el('div',{class:'fields'},rows.map(r=>r.node)),fb,el('div',{class:'rowbtns'},chk,hintB,allB));
+  }else{
+    const opts=el('div',{class:'opts'});q.opts.forEach((o,k)=>opts.append(el('button',{type:'button',class:'mono'===o?'':'',onclick:()=>{if(Q.solved)return;const ok=k===q.a;score(ok);opts.children[k].className=ok?'right':'wrong';if(ok){Q.solved=true;fb.replaceChildren(el('p',{class:'note ok'},p.done&&p.streak===GOAL?'Correct, and that is five in a row: concept mastered.':'Correct.'));showWork(q.work.length);bar.replaceChildren(next);next.focus();}else fb.replaceChildren(el('p',{class:'note bad'},'Not that one. Have another go, or ask for the explanation.'));refresh();}},o)));
+    reveal=()=>{Q.solved=true;opts.children[q.a].className='right';bar.replaceChildren(next);};
+    const bar=el('div',{class:'rowbtns'},hintB,allB);task.append(opts,fb,bar);
+  }
+  if(Q.shown)showWork(Q.shown);
+  out.push(streak,task,work);return out;
+}
+window.addEventListener('hashchange',()=>{const id=location.hash.slice(1);if(C.some(c=>c.id===id)&&(!cur||cur.id!==id))open(id,0);});
+const first=location.hash.slice(1);open(C.some(c=>c.id===first)?first:(C.some(c=>c.id===S.last)?S.last:'networks'),0);
+})();
+</script>
+</body>
+</html>
